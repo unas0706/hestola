@@ -1,0 +1,184 @@
+/* Logo intro, ported from design/HESTOLA – Logo Intro.html. Timings, easings and colours
+   are unchanged; keyframes are prefixed. Additions: a "Tap to enter" gate first (.is-gate,
+   .li-enter) so the intro can play with sound, the overlay fades out when skipped
+   (.is-leaving), and the "tap to replay" hint is a Skip button. */
+.logo-intro {
+  --li-orange: #d9541e;
+  --li-black: #111111;
+  --li-ivory: #f3eee3;
+  --li-grey: #a39d90;
+  --li-e: cubic-bezier(0.4, 0, 0.2, 1);
+  --li-o: cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--li-black);
+  cursor: pointer;
+  overflow: hidden;
+  transition: opacity 0.6s var(--li-e);
+  -webkit-tap-highlight-color: transparent;
+}
+.logo-intro.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Hold every animation until .go. !important because each element's own `animation`
+   shorthand would otherwise reset the play state to running (the gate can wait a while). */
+.logo-intro:not(.go) *:not(.li-enter),
+.logo-intro:not(.go)::before {
+  animation-play-state: paused !important;
+}
+.logo-intro::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 42%, rgba(217, 84, 30, 0.2), transparent 58%);
+  opacity: 0;
+  will-change: opacity;
+  animation: li-glow 7s 0.1s linear forwards;
+}
+.logo-intro .li-lay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+}
+.logo-intro .li-logo {
+  width: min(64vw, 300px);
+  height: auto;
+  color: var(--li-orange);
+  transform: translateZ(0);
+}
+.logo-intro .li-d {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: li-draw var(--t) var(--s) var(--li-e) forwards;
+}
+.logo-intro .li-word {
+  margin: 0.15em 0 0;
+  font: 400 clamp(46px, 16vw, 88px) / 1 "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  letter-spacing: 0.07em;
+  padding-left: 0.07em;
+  color: var(--li-ivory);
+}
+.logo-intro .li-word span {
+  display: inline-block;
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  will-change: transform, opacity;
+  animation: li-rise 1.2s calc(3.6s + var(--i) * 0.08s) var(--li-o) forwards;
+}
+.logo-intro .li-tag {
+  margin: 0.9em 0 0;
+  font: 500 12px / 1 "Inter Variable", Inter, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.34em;
+  padding-left: 0.34em;
+  color: var(--li-grey);
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  will-change: transform, opacity;
+  animation: li-rise 1.4s 4.8s var(--li-o) forwards;
+}
+.logo-intro .li-fin {
+  background: var(--li-orange);
+  opacity: 0;
+  will-change: opacity;
+  animation: li-fade 1.4s 6.3s var(--li-e) forwards;
+}
+.logo-intro .li-fin .li-logo,
+.logo-intro .li-fin .li-word {
+  color: var(--li-black);
+}
+.logo-intro .li-fin .li-word span,
+.logo-intro .li-fin .li-tag {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+.logo-intro .li-fin .li-tag {
+  color: #111111;
+}
+.logo-intro .li-skip {
+  position: absolute;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border: 0;
+  background: none;
+  font: 500 11px / 1 "Inter Variable", Inter, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.2em;
+  padding-left: calc(14px + 0.2em);
+  color: var(--li-grey);
+  cursor: pointer;
+  transition: color 0.2s;
+  animation: none;
+}
+.logo-intro .li-skip:hover {
+  color: var(--li-ivory);
+}
+.logo-intro.is-final .li-skip {
+  color: var(--li-black);
+}
+.logo-intro .li-skip:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.logo-intro .li-enter {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 14px 22px;
+  border: 0;
+  background: none;
+  font: 500 13px / 1 "Inter Variable", Inter, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.08em;
+  color: var(--li-grey);
+  cursor: pointer;
+  opacity: 0;
+  animation: li-gate-in 0.8s 0.3s var(--li-o) forwards;
+  animation-play-state: running;
+  transition: color 0.2s;
+}
+.logo-intro .li-enter:hover {
+  color: var(--li-ivory);
+}
+.logo-intro .li-enter:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.logo-intro.is-gate .li-skip {
+  visibility: hidden;
+}
+@keyframes li-gate-in {
+  to { opacity: 1; }
+}
+@keyframes li-draw {
+  0% { opacity: 0; stroke-dashoffset: 1; }
+  3% { opacity: 1; }
+  100% { opacity: 1; stroke-dashoffset: 0; }
+}
+@keyframes li-rise {
+  to { opacity: 1; transform: none; }
+}
+@keyframes li-glow {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes li-fade {
+  to { opacity: 1; }
+}

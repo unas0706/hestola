@@ -1,0 +1,162 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/600.css";
+@import "@fontsource/bebas-neue";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans: 'Inter Variable', system-ui, sans-serif;
+    --font-heading: 'Cormorant Garamond', Georgia, serif;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-wordmark: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+
+    /* Hestola brand tokens (design.md §3.1) */
+    --color-brand: var(--hestola-orange);
+    --color-ink: var(--hestola-ink);
+    --color-ivory: var(--hestola-ivory);
+    --color-stone: var(--hestola-stone);
+    --color-wood: var(--hestola-wood);
+
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Hestola is light-only (design.md §2.1: no dark theme), so there is no .dark block.
+ * Contrast: ink on orange 4.7:1 (white on orange fails AA, so primary text is ink);
+ * muted text #6B665D on ivory 4.9:1. Warm grey #A39D90 is for lines only, not text.
+ */
+:root {
+    --hestola-orange: #D9541E;
+    --hestola-ink: #111111;
+    --hestola-ivory: #F3EEE3;
+    --hestola-stone: #A39D90;
+    --hestola-wood: #C99A6B;
+
+    --background: var(--hestola-ivory);
+    --foreground: var(--hestola-ink);
+    --card: #FFFFFF;
+    --card-foreground: var(--hestola-ink);
+    --popover: #FFFFFF;
+    --popover-foreground: var(--hestola-ink);
+    --primary: var(--hestola-orange);
+    --primary-foreground: var(--hestola-ink);
+    --secondary: #E8E1D2;
+    --secondary-foreground: var(--hestola-ink);
+    --muted: #E8E1D2;
+    --muted-foreground: #6B665D;
+    --accent: #E8E1D2;
+    --accent-foreground: var(--hestola-ink);
+    --destructive: #B42318;
+    --border: var(--hestola-stone);
+    --input: var(--hestola-stone);
+    --ring: var(--hestola-ink);
+    --chart-1: var(--hestola-orange);
+    --chart-2: var(--hestola-ink);
+    --chart-3: #6B665D;
+    --chart-4: var(--hestola-stone);
+    --chart-5: var(--hestola-wood);
+    --radius: 0.125rem;
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: var(--hestola-ink);
+    --sidebar-primary: var(--hestola-orange);
+    --sidebar-primary-foreground: var(--hestola-ink);
+    --sidebar-accent: #E8E1D2;
+    --sidebar-accent-foreground: var(--hestola-ink);
+    --sidebar-border: var(--hestola-stone);
+    --sidebar-ring: var(--hestola-ink);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Entrance motion (.enter-fade).                                      */
+/* ------------------------------------------------------------------ */
+@keyframes hestola-fade-up {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+.enter-fade {
+  animation: hestola-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter-fade {
+    animation: none !important;
+  }
+}
+
+/* Product sheet palette (src/components/product/): cool neutrals on a white canvas so the
+   garment carries the colour. Orange appears only on the saved heart. Scoped to the sheet;
+   the brand tokens above are unchanged. */
+.product-sheet {
+  /* Softer corners than the site's 2px: card 14px, button 11px, size cells 8px. */
+  --radius: 0.5rem;
+  --sheet-canvas: #FFFFFF;
+  --sheet-card: #EEEEEC;
+  --sheet-ink: #0A0A0A;
+  --sheet-ink-raised: #2A2A2A;
+  --sheet-muted: #6B6B6B;
+  --sheet-line: #E4E4E2;
+  --sheet-dot: #C9C9C6;
+  --sheet-off: #F4F4F3;
+  --sheet-off-ink: #B5B5B2;
+  --sheet-sale-bg: #FDECEC;
+  --sheet-sale-ink: #B42318;
+}

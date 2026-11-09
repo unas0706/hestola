@@ -1,0 +1,338 @@
+/* Landing room: an orange-painted room in one-point perspective, lit by three spots.
+   Geometry: --t is where the back wall starts (ceiling depth), --f the floor line, --s the
+   side-wall depth. --s = (100 - f + t) / 2 so every receding edge meets at one vanishing
+   point (keep in step with ROOMS in LandingPage.jsx). */
+.room {
+  --orange: #d9541e;
+  --orange-shade: #8c3410;
+  --ember: #3a1a0e;
+  --concrete: #201a17;
+  --ink: #111111;
+  --ivory: #f3eee3;
+  --light: 255, 210, 174;
+  --t: 11%;
+  --f: 70%;
+  --s: 20.5%;
+  position: relative;
+  height: 100svh;
+  min-height: 520px;
+  overflow: hidden;
+  background: var(--concrete);
+  isolation: isolate;
+}
+/* Phones: a shallower room, so the back wall (and the rail on it) gets most of the width. */
+@media (max-width: 640px) {
+  .room {
+    --t: 7%;
+    --f: 82%;
+    --s: 12.5%;
+  }
+}
+
+.room > * {
+  position: absolute;
+}
+
+/* ---- Surfaces ---------------------------------------------------------- */
+.room-ceiling,
+.room-side,
+.room-floor {
+  inset: 0;
+}
+.room-ceiling {
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--s)) var(--t), var(--s) var(--t));
+  background: linear-gradient(to bottom, #1d0d06, var(--ember));
+}
+.room-side {
+  background: var(--orange-shade);
+}
+.room-side {
+  /* Same paint as the back wall, turned away from the spots: darker under the ceiling and
+     towards the viewer, warmest where it meets the lit back wall. */
+  --shade: linear-gradient(to bottom, rgba(30, 8, 0, 0.4), transparent 30%, transparent 75%, rgba(30, 8, 0, 0.3));
+}
+.room-side.is-left {
+  clip-path: polygon(0 0, var(--s) var(--t), var(--s) var(--f), 0 100%);
+  background: var(--shade), linear-gradient(to right, #5a1f08, var(--orange-shade) 55%, #b2451a);
+}
+.room-side.is-right {
+  clip-path: polygon(100% 0, 100% 100%, calc(100% - var(--s)) var(--f), calc(100% - var(--s)) var(--t));
+  background: var(--shade), linear-gradient(to left, #5a1f08, var(--orange-shade) 55%, #b2451a);
+}
+.room-floor {
+  clip-path: polygon(var(--s) var(--f), calc(100% - var(--s)) var(--f), 100% 100%, 0 100%);
+  background:
+    /* the orange wall reflected in the polished floor */
+    linear-gradient(to bottom, rgba(217, 84, 30, 0.42) var(--f), rgba(217, 84, 30, 0.12) calc(var(--f) + 9%), transparent calc(var(--f) + 24%)),
+    linear-gradient(to bottom, #2a211c var(--f), var(--concrete) 82%, #120e0c);
+}
+.room-joints {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.room-joints line {
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.room-joints.is-narrow {
+  display: none;
+}
+@media (max-width: 640px) {
+  .room-joints.is-wide {
+    display: none;
+  }
+  .room-joints.is-narrow {
+    display: block;
+  }
+}
+
+/* ---- Back wall ----------------------------------------------------------- */
+.room-back {
+  left: var(--s);
+  right: var(--s);
+  top: var(--t);
+  height: calc(var(--f) - var(--t));
+  background: var(--orange);
+  overflow: hidden;
+}
+.room-back > * {
+  position: absolute;
+  inset: 0;
+}
+/* Ambient: darker towards the ceiling and the corners, before the spots add light. */
+.room-ambient {
+  background:
+    linear-gradient(to bottom, rgba(40, 10, 0, 0.42), rgba(40, 10, 0, 0.12) 35%, rgba(40, 10, 0, 0.18) 100%),
+    linear-gradient(to right, rgba(40, 10, 0, 0.3), transparent 14%, transparent 86%, rgba(40, 10, 0, 0.3));
+}
+/* Plaster grain (an SVG noise filter), multiplied into the paint. */
+.room-grain {
+  width: 100%;
+  height: 100%;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+/* A downlight's scallop: hot just under the fixture, a soft parabola fading down the wall. */
+.room-scallop {
+  left: calc(var(--x) * 100% - 19%);
+  right: auto;
+  width: 38%;
+  height: 92%;
+  background:
+    radial-gradient(ellipse 30% 26% at 50% 0%, rgba(var(--light), 0.75), transparent 100%),
+    radial-gradient(ellipse 42% 78% at 50% 0%, rgba(var(--light), 0.42) 0%, rgba(var(--light), 0.22) 55%, transparent 100%);
+  mix-blend-mode: screen;
+}
+/* Contact shadow where the wall meets the floor. */
+.room-skirting {
+  top: auto;
+  height: 9%;
+  background: linear-gradient(to bottom, transparent, rgba(30, 8, 0, 0.35) 75%, rgba(17, 17, 17, 0.9) 96%);
+}
+
+/* Reflections of the scallops in the floor, just below the wall. */
+.room-pool {
+  top: var(--f);
+  left: calc(var(--s) + (100% - 2 * var(--s)) * var(--x) - 5%);
+  width: 10%;
+  height: 16%;
+  background: radial-gradient(ellipse 50% 100% at 50% 0%, rgba(var(--light), 0.22), transparent 70%);
+  mix-blend-mode: screen;
+  filter: blur(6px);
+}
+
+/* ---- Lighting track --------------------------------------------------- */
+.room-track {
+  left: calc(var(--s) + 6%);
+  right: calc(var(--s) + 6%);
+  top: calc(var(--t) * 0.55);
+  height: 5px;
+  background: linear-gradient(to bottom, #2b2522, #0b0908);
+  border-radius: 1px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.room-spot {
+  top: calc(var(--t) * 0.55 + 4px);
+  left: calc(var(--s) + (100% - 2 * var(--s)) * var(--x));
+  width: clamp(14px, 1.5vw, 22px);
+  height: clamp(22px, 2.6vw, 38px);
+  transform: translateX(-50%);
+}
+.room-spot::before {
+  /* stem */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 28%;
+  transform: translateX(-50%);
+  background: #0b0908;
+}
+.room-spot::after {
+  /* can, aimed at the wall: we see its back, with the beam glowing past its rim */
+  content: "";
+  position: absolute;
+  inset: 24% 0 0;
+  border-radius: 40% 40% 45% 45% / 30% 30% 60% 60%;
+  background: linear-gradient(to right, #050404, #2d2724 45%, #0d0b0a);
+  box-shadow: 0 6px 14px 2px rgba(var(--light), 0.55);
+}
+
+/* ---- Sign ------------------------------------------------------------- */
+.room-sign {
+  left: var(--s);
+  right: var(--s);
+  top: calc(var(--t) + (var(--f) - var(--t)) * 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--ink);
+  pointer-events: none;
+}
+.room-sign .sign-part {
+  transform-origin: 0 0;
+}
+.room-sign .sign-logo {
+  width: clamp(44px, 4.6vw, 68px);
+  height: auto;
+  color: var(--ink);
+}
+.room-sign .sign-word {
+  margin: 0.15em 0 0;
+  font: 400 clamp(26px, 3vw, 42px) / 1 "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  letter-spacing: 0.07em;
+  padding-left: 0.07em;
+}
+.room-sign .sign-tag {
+  margin: 0.9em 0 0;
+  font: 500 11px / 1 "Inter Variable", Inter, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.34em;
+  padding-left: 0.34em;
+}
+/* Letters stand off the wall; the spot above casts their shadow down onto it. */
+.room-sign .sign-logo,
+.room-sign .sign-word {
+  filter: drop-shadow(0 0 0 rgba(60, 14, 0, 0));
+  transition: filter 1.2s ease 1.4s;
+}
+.room[data-state="lit"] .room-sign .sign-logo,
+.room[data-state="lit"] .room-sign .sign-word,
+.room[data-state="instant"] .room-sign .sign-logo,
+.room[data-state="instant"] .room-sign .sign-word {
+  filter: drop-shadow(0 9px 7px rgba(60, 14, 0, 0.38));
+}
+
+/* ---- Call to action --------------------------------------------------------- */
+.room-explore {
+  /* Holds the liquid-metal button (src/components/ui/liquid-metal-button.jsx). */
+  left: 50%;
+  bottom: max(6vh, 28px);
+  transform: translateX(-50%);
+  line-height: 0;
+  transition: opacity 0.7s ease 0.1s, translate 0.7s ease 0.1s;
+}
+.room:not([data-ready]) .room-explore {
+  opacity: 0;
+  translate: 0 8px;
+  pointer-events: none;
+}
+
+/* ---- Rail --------------------------------------------------------------- */
+/* The new drop hangs on the back wall under the sign. */
+.room-railzone {
+  left: calc(var(--s) + 1.5%);
+  right: calc(var(--s) + 1.5%);
+  top: calc(var(--t) + (var(--f) - var(--t)) * 0.33);
+  bottom: calc(100% - var(--f) + 1.5%);
+  display: flex;
+  flex-direction: column;
+}
+.room-rack {
+  flex: none;
+}
+@media (max-width: 640px) {
+  .room-railzone {
+    left: var(--s);
+    right: var(--s);
+    top: calc(var(--t) + (var(--f) - var(--t)) * 0.27);
+    justify-content: center; /* the rail sits centred between sign and floor */
+  }
+  /* The pieces either side of the one in front fade into the wall instead of being cut off;
+     the top band (the rod, its brackets and the hooks) stays solid. */
+  .room-railzone [data-mode="carousel"] [data-stage] {
+    --fade: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+    --band: linear-gradient(#000 40px, transparent 40px);
+    -webkit-mask-image: var(--band), var(--fade);
+    mask-image: var(--band), var(--fade);
+  }
+}
+
+/* The rail draws across the wall from left to right before the pieces arrive. */
+.room-railzone.is-drawing [data-rail] {
+  transform-origin: left center;
+  animation: room-rail-draw 0.8s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+@keyframes room-rail-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* "Not updated yet." above the button. */
+.room-notice {
+  left: 0;
+  right: 0;
+  bottom: calc(max(6vh, 28px) + 62px);
+  margin: 0;
+  text-align: center;
+  color: var(--ivory);
+  font: 500 14px / 1.4 "Inter Variable", Inter, Helvetica, Arial, sans-serif;
+  opacity: 0;
+  translate: 0 4px;
+  transition: opacity 0.25s, translate 0.25s;
+  pointer-events: none;
+}
+.room-notice[data-shown] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* ---- Lights-off state and the switch-on ------------------------------------ */
+/* While the intro plays the room is "dark": a flat coat of the brand orange, identical to
+   the intro's end frame. On "lit" it lifts, then the three spots click on in turn. */
+.room-dark {
+  inset: 0;
+  background: var(--orange);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
+}
+.room[data-state="dark"] .room-dark {
+  opacity: 1;
+  transition: none;
+}
+.room-scallop,
+.room-pool {
+  transition: opacity 0.28s ease-out calc(1.35s + var(--i) * 0.22s);
+}
+.room[data-state="dark"] .room-scallop,
+.room[data-state="dark"] .room-pool {
+  opacity: 0;
+  transition: none;
+}
+.room[data-state="instant"] * {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room *,
+  .room *::before,
+  .room *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
