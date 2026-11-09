@@ -55,10 +55,34 @@ PIECES = {
         "white_bg": True,
         "views": {"front": (0, 0, 430, 559), "back": (430, 0, 815, 559), "side": (815, 0, 1024, 559)},
     },
+    # White fabric on a checkerboard: "light_fabric" removes only the exact checker values.
+    "demo-white-shirt": {
+        "file": "image copy 3.png",
+        "light_fabric": True,
+        "clean_specks": ("side",),
+        "views": {"front": (0, 0, 455, 683), "back": (455, 0, 860, 683), "side": (860, 0, 1024, 683)},
+    },
+    # "image copy 5.png" is the same file as "image copy 4.png".
+    "demo-crew-sweatshirt": {
+        "file": "image copy 4.png",
+        "textured": True,
+        "clean_specks": ("side",),
+        "views": {"front": (0, 0, 459, 683), "back": (459, 0, 859, 683), "side": (859, 0, 1024, 683)},
+    },
+    "demo-zip-hoodie": {
+        "file": "image copy 6.png",
+        "clean_specks": ("side",),
+        "views": {"front": (0, 0, 462, 683), "back": (462, 0, 855, 683), "side": (855, 0, 1024, 683)},
+    },
+    "demo-navy-polo": {
+        "file": "image copy 7.png",
+        "clean_specks": ("side",),
+        "views": {"front": (0, 0, 462, 683), "back": (462, 0, 861, 683), "side": (861, 0, 1024, 683)},
+    },
 }
 
 
-def cut_out(rgb: np.ndarray, textured: bool = False, clean_specks: bool = False, white_bg: bool = False) -> np.ndarray:
+def cut_out(rgb: np.ndarray, textured: bool = False, clean_specks: bool = False, white_bg: bool = False, light_fabric: bool = False) -> np.ndarray:
     """RGB uint8 array with a baked checkerboard -> RGBA uint8 array, tightly cropped.
 
     textured=True is for light, grainy fabric (heather grey) whose highlights are as light
@@ -66,6 +90,9 @@ def cut_out(rgb: np.ndarray, textured: bool = False, clean_specks: bool = False,
     clean_specks=True paints out a light blob in the hem (a sparkle watermark).
     white_bg=True is for photos on plain white: only near-white counts as background, so
     cream and other light fabric is kept.
+    light_fabric=True is for white fabric on a checkerboard: only the checker's own two
+    values (the grey and pure white) count as background, plus the thin blended grid lines
+    between them; the fabric's off-white shading is kept.
     """
     a = rgb.astype(np.int16)
     h, w = a.shape[:2]
@@ -86,6 +113,23 @@ def cut_out(rgb: np.ndarray, textured: bool = False, clean_specks: bool = False,
         # The studio shadow under the piece is colourless grey; the fabric has some colour
         # (cream, blue), so light, colourless pixels are background.
         bg_like = ((mx - mn) <= 6) & (mn >= 200)
+    # The grey squares drift lighter in places (about +10 under the arms of the white shirt).
+    is_grey = neutral & (np.abs(mn - grey) <= (12 if light_fabric else 6))
+    is_white = neutral & (mn >= 250)
+    # Where both checker values sit close together: true of the checkerboard, never of smooth
+    # fabric (the grid drifts across the image, so it cannot be modelled as a fixed pattern).
+    checkerish = (ndimage.uniform_filter(is_grey.astype(float), 15) > 0.15) & (
+        ndimage.uniform_filter(is_white.astype(float), 15) > 0.15
+    )
+    if light_fabric:
+        # Grid lines blend grey into white over a pixel or two; take neutral pixels next to
+        # pure checker on both a grey and a white side.
+        near = ndimage.binary_dilation(is_grey, iterations=2) & ndimage.binary_dilation(is_white, iterations=2)
+        # The grid is blotchy in places, so look wider (31 px) than for the gap test.
+        mixed = (ndimage.uniform_filter(is_grey.astype(float), 31) > 0.06) & (
+            ndimage.uniform_filter(is_white.astype(float), 31) > 0.06
+        )
+        bg_like = (is_grey | is_white | (neutral & near)) & mixed
     mean = ndimage.uniform_filter(mn.astype(float), 5)
     var = ndimage.uniform_filter(mn.astype(float) ** 2, 5) - mean**2  # local grain
     if textured:
@@ -97,9 +141,19 @@ def cut_out(rgb: np.ndarray, textured: bool = False, clean_specks: bool = False,
     sizes = ndimage.sum(bg_like, lab, range(1, n + 1))
     edge = set(lab[0]) | set(lab[-1]) | set(lab[:, 0]) | set(lab[:, -1])
     drop = np.zeros(n + 1, bool)
+    grey_share = ndimage.mean(is_grey, lab, range(1, n + 1))
+    white_share = ndimage.mean(is_white, lab, range(1, n + 1))
     for i in range(1, n + 1):
-        drop[i] = i in edge or sizes[i - 1] > 3000  # outside, or a big gap inside the garment
+        # outside, a big gap inside the garment, or a small one that is plainly checkerboard
+        # (e.g. under an arm)
+        checker_gap = not white_bg and sizes[i - 1] > 150 and grey_share[i - 1] > 0.15 and white_share[i - 1] > 0.15
+        drop[i] = i in edge or sizes[i - 1] > 3000 or checker_gap
     fg = ~drop[lab]
+
+    if light_fabric:
+        # Checker left inside the outline (gaps under the arms), then thin slivers of it.
+        fg &= ~((is_grey | is_white) & checkerish)
+        fg = ndimage.binary_opening(fg, iterations=4)
 
     # Keep the garment itself (largest blob); drops smudges, captions and stray specks.
     lab, n = ndimage.label(fg)
@@ -124,7 +178,15 @@ def cut_out(rgb: np.ndarray, textured: bool = False, clean_specks: bool = False,
         # Fill over a light blob in the hem (a sparkle watermark). The hem rib is the
         # darkest fabric, so a smooth patch brighter than the rib is the watermark.
         rows = np.arange(h)[:, None] >= 0.82 * h
-        patch = (ndimage.gaussian_filter(mn.astype(float), 3) > 169) & (alpha > 0.5) & rows
+        soft = ndimage.gaussian_filter(mn.astype(float), 3)
+        # Heather grey: brighter than the rib. Dark or white fabric: well off the fabric's own tone.
+        if textured:
+            patch = soft > 169
+        else:
+            tone = np.median(mn[(alpha > 0.5) & rows])
+            sparkle = np.abs(mn.astype(float) - tone) > 45
+            patch = ndimage.uniform_filter(sparkle.astype(float), 9) > 0.35
+        patch &= (alpha > 0.5) & rows
         patch = ndimage.binary_dilation(patch, iterations=6) & (alpha > 0.5)
         if patch.any():
             # Fill from the surrounding fabric (blur of the known pixels), then add grain.
@@ -157,6 +219,7 @@ def main() -> None:
                 textured=spec.get("textured", False),
                 clean_specks=view in spec.get("clean_specks", ()),
                 white_bg=spec.get("white_bg", False),
+                light_fabric=spec.get("light_fabric", False),
             )
 
         # One scale for every view of the piece, so it does not resize as it turns.

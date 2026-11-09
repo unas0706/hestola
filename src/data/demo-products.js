@@ -15,14 +15,80 @@ const VIEWS = ['front', 'back', 'side']
 // Not a Hestola size chart: real sizes and stock come from admin data per variant (§17).
 const sizes = (stock) => ['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((label, i) => ({ label, stock: stock[i] }))
 
+// DEMO size models for Find my size (design.md §6.7). Invented for local development so the
+// feature can be tried; they are NOT Hestola size charts or validated fit data. Real models are
+// configured per product or category by the owner (§2.2, §20). Shape: src/lib/size-suggestion.js.
+const DEMO_FIT = {
+  weigh: { weight: 0.65, height: 0.35 },
+  fitShift: { snug: -0.35, regular: 0, relaxed: 0.35 },
+}
+const DEMO_SIZE_MODELS = {
+  regular: {
+    demo: true,
+    ...DEMO_FIT,
+    sizes: [
+      { label: 'XS', heightCm: [150, 162], weightKg: [42, 52] },
+      { label: 'S', heightCm: [162, 169], weightKg: [52, 60] },
+      { label: 'M', heightCm: [169, 176], weightKg: [60, 69] },
+      { label: 'L', heightCm: [176, 183], weightKg: [69, 79] },
+      { label: 'XL', heightCm: [183, 190], weightKg: [79, 90] },
+      { label: 'XXL', heightCm: [190, 198], weightKg: [90, 104] },
+    ],
+  },
+  oversized: {
+    demo: true,
+    ...DEMO_FIT,
+    fitNote: 'This piece is cut oversized, so your usual size already gives the roomy look.',
+    sizes: [
+      { label: 'XS', heightCm: [150, 162], weightKg: [42, 53] },
+      { label: 'S', heightCm: [162, 169], weightKg: [53, 62] },
+      { label: 'M', heightCm: [169, 176], weightKg: [62, 72] },
+      { label: 'L', heightCm: [176, 183], weightKg: [72, 83] },
+      { label: 'XL', heightCm: [183, 190], weightKg: [83, 95] },
+      { label: 'XXL', heightCm: [190, 198], weightKg: [95, 110] },
+    ],
+  },
+}
+
+// Demo copy for the product sheet's description. It only describes what the photos show; fabric,
+// care and fit details come from the catalogue once it exists (design.md §6.5, items 16-18).
+const COPY = {
+  'demo-heather-tee': {
+    description: 'An everyday crew neck in soft heather grey. Dropped shoulders and a relaxed body keep it easy on its own or under an open shirt, with the Hestola mark small on the chest.',
+  },
+  'demo-oxford-shirt': {
+    description: 'A light blue Oxford shirt with a button-down collar, cut to wear tucked in or loose. A chest pocket carries a small Hestola H, and it layers as easily over a T-shirt as under a knit.',
+  },
+  'demo-cream-tee': {
+    description: 'An oversized T-shirt in cream, with a boxy body and sleeves that fall past the shoulder. The Hestola logo and "Wear your identity" sit on the chest, with an orange tab on the sleeve.',
+  },
+  'demo-white-shirt': {
+    description: 'A white long-sleeve shirt with a point collar and a single chest pocket carrying the Hestola logo. The back is printed with the logo and "Wear your identity" across the shoulders, and an orange tab sits on the cuff.',
+  },
+  'demo-crew-sweatshirt': {
+    description: 'A heather grey crew neck sweatshirt with ribbed cuffs and hem. "Hestola, wear your identity" is small on the chest, the orange H and wordmark run large across the back, and an orange tab sits at the hem.',
+  },
+  'demo-zip-hoodie': {
+    description: 'A black zip-up hoodie with drawcords, a kangaroo pocket split by the zip, and a round Hestola badge on the chest. The orange H and "Wear your identity" are printed large on the back.',
+  },
+  'demo-navy-polo': {
+    description: 'A navy polo with a three-button placket and ribbed collar and cuffs. The orange H and Hestola wordmark sit on the chest, with an orange tab on the sleeve.',
+  },
+}
+
 const PIECES = [
-  { id: 'demo-3', slug: 'demo-heather-tee', name: 'Crew neck T-shirt', garment: 'tee', pricePaise: 89900, colour: { name: 'Heather grey', hex: '#A8A8A8' }, images: photo('demo-heather-tee', VIEWS), sizes: sizes([4, 12, 9, 2, 0, 6]) },
-  { id: 'demo-1', slug: 'demo-oxford-shirt', name: 'Oxford shirt', garment: 'shirt', pricePaise: 199900, compareAtPaise: 249900, colour: { name: 'Light blue', hex: '#A9C6EA' }, images: photo('demo-oxford-shirt', VIEWS), sizes: sizes([0, 7, 3, 10, 5, 1]) },
-  { id: 'demo-12', slug: 'demo-cream-tee', name: 'Oversized logo T-shirt', garment: 'tee', pricePaise: 99900, colour: { name: 'Cream', hex: '#ECE8DC' }, images: photo('demo-cream-tee', VIEWS), sizes: sizes([6, 0, 11, 8, 2, 4]) },
+  { id: 'demo-3', slug: 'demo-heather-tee', name: 'Crew neck T-shirt', garment: 'tee', pricePaise: 89900, colour: { name: 'Heather grey', hex: '#A8A8A8' }, images: photo('demo-heather-tee', VIEWS), sizes: sizes([4, 12, 9, 2, 0, 6]), sizeModel: DEMO_SIZE_MODELS.regular },
+  { id: 'demo-1', slug: 'demo-oxford-shirt', name: 'Oxford shirt', garment: 'shirt', pricePaise: 199900, compareAtPaise: 249900, colour: { name: 'Light blue', hex: '#A9C6EA' }, images: photo('demo-oxford-shirt', VIEWS), sizes: sizes([0, 7, 3, 10, 5, 1]), sizeModel: DEMO_SIZE_MODELS.regular },
+  { id: 'demo-20', slug: 'demo-zip-hoodie', name: 'Zip hoodie', garment: 'hoodie', pricePaise: 249900, colour: { name: 'Black', hex: '#2A2A2A' }, images: photo('demo-zip-hoodie', VIEWS), sizes: sizes([2, 8, 6, 9, 4, 0]), sizeModel: DEMO_SIZE_MODELS.regular },
+  { id: 'demo-12', slug: 'demo-cream-tee', name: 'Oversized logo T-shirt', garment: 'tee', pricePaise: 99900, colour: { name: 'Cream', hex: '#ECE8DC' }, images: photo('demo-cream-tee', VIEWS), sizes: sizes([6, 0, 11, 8, 2, 4]), sizeModel: DEMO_SIZE_MODELS.oversized },
+  { id: 'demo-21', slug: 'demo-navy-polo', name: 'Polo T-shirt', garment: 'polo', pricePaise: 129900, colour: { name: 'Navy', hex: '#26335A' }, images: photo('demo-navy-polo', VIEWS), sizes: sizes([3, 9, 12, 7, 0, 2]), sizeModel: DEMO_SIZE_MODELS.regular },
+  { id: 'demo-22', slug: 'demo-crew-sweatshirt', name: 'Crew neck sweatshirt', garment: 'sweatshirt', pricePaise: 179900, colour: { name: 'Heather grey', hex: '#A3A3A3' }, images: photo('demo-crew-sweatshirt', VIEWS), sizes: sizes([0, 5, 8, 10, 3, 1]), sizeModel: DEMO_SIZE_MODELS.regular },
+  { id: 'demo-23', slug: 'demo-white-shirt', name: 'White shirt', garment: 'shirt', pricePaise: 169900, colour: { name: 'White', hex: '#F2F2F0' }, images: photo('demo-white-shirt', VIEWS), sizes: sizes([4, 6, 0, 9, 5, 3]), sizeModel: DEMO_SIZE_MODELS.regular },
 ]
 
-// The pieces repeat in turn to fill ten hooks, like the original demo (each copy needs its own id).
+// Ten hooks, like the original demo: each piece once, then the first ones again (each copy
+// needs its own id). Listed so neighbouring colours contrast along the rail.
 export const DEMO_RAIL_PRODUCTS = Array.from({ length: 10 }, (_, i) => {
   const piece = PIECES[i % PIECES.length]
-  return { ...piece, id: `${piece.id}-${i + 1}` }
+  return { ...piece, ...COPY[piece.slug], id: `${piece.id}-${i + 1}` }
 })

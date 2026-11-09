@@ -6,8 +6,8 @@
  * Hestola changes (layout and look otherwise match the original demo):
  * - `detailAction(item)` prop: renders a node (e.g. a product link) in the detail dialog.
  * - `renderDetail(ctx)` prop: replaces the detail dialog's layout with the caller's (Hestola's
- *   product sheet). ctx = { item, index, total, stage, closeRef, close, side, turnTo, titleId,
- *   shown, reduced }. `stage` is the hanging garment (lift animation, spin and drag unchanged);
+ *   product sheet). ctx = { item, items, openAt(index), index, total, stage, closeRef, close,
+ *   side, turnTo, titleId, shown, reduced }. `openAt` swaps the open piece without closing. `stage` is the hanging garment (lift animation, spin and drag unchanged);
  *   place it in a box with a definite height. Put `closeRef` on the close button.
  * - Detail dialog focus trap includes links as well as buttons.
  * - Price tags: 11px text (was 9px) and tilted the other way at rest (TAG_REST), so they
@@ -1493,7 +1493,7 @@ export function ClothingRailHero({ items, eyebrow, heading, caption, action, aut
         {action}
       </div>
 
-      {openIndex !== null && items[openIndex] && <Detail uid={uid} item={items[openIndex]} detailAction={detailAction} renderDetail={renderDetail} index={openIndex} total={count} hanger={hanger} labels={labels} reduced={reduced} source={() => turns.current[openIndex]?.getBoundingClientRect() ?? null} onLift={(lift) => setLifted(lift ? openIndex : null)} onClose={() => {
+      {openIndex !== null && items[openIndex] && <Detail uid={uid} item={items[openIndex]} items={items} openAt={open} detailAction={detailAction} renderDetail={renderDetail} index={openIndex} total={count} hanger={hanger} labels={labels} reduced={reduced} source={() => turns.current[openIndex]?.getBoundingClientRect() ?? null} onLift={(lift) => setLifted(lift ? openIndex : null)} onClose={() => {
 		const index = openIndex;
 		returnFocus.current = index;
 		close();
@@ -1501,7 +1501,7 @@ export function ClothingRailHero({ items, eyebrow, heading, caption, action, aut
 	}} />}
     </section>;
 }
-function Detail({ uid, item, detailAction, renderDetail, index, total, hanger, labels, reduced, source, onLift, onClose }) {
+function Detail({ uid, item, items, openAt, detailAction, renderDetail, index, total, hanger, labels, reduced, source, onLift, onClose }) {
 	const dialogRef = React.useRef(null);
 	const figureRef = React.useRef(null);
 	const spinRef = React.useRef(null);
@@ -1724,6 +1724,8 @@ function Detail({ uid, item, detailAction, renderDetail, index, total, hanger, l
       <div aria-hidden="true" className={`fixed inset-0 bg-background transition-opacity duration-300 motion-reduce:transition-none ${shown ? "opacity-100" : "opacity-0"}`} onClick={dismiss} />
       {renderDetail({
 		item,
+		items,
+		openAt,
 		index,
 		total,
 		stage,

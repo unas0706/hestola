@@ -17,13 +17,17 @@ function subscribe(listener) {
 }
 
 // Adds one of the exact variant; a repeat add raises that line's quantity.
-export function addToBag({ productId, slug, name, colour, size, pricePaise }) {
-  const key = `${productId}:${colour}:${size}`
+export function addToBag({ productId, slug, name, colour, size, pricePaise, image }) {
+  const key = `${slug}:${colour}:${size}`
   const existing = state.lines.find((line) => line.key === key)
   const lines = existing
     ? state.lines.map((line) => (line === existing ? { ...line, quantity: line.quantity + 1 } : line))
-    : [...state.lines, { key, productId, slug, name, colour, size, pricePaise, quantity: 1 }]
+    : [...state.lines, { key, productId, slug, name, colour, size, pricePaise, image, quantity: 1 }]
   set({ ...state, lines })
+}
+
+export function removeFromBag(key) {
+  set({ ...state, lines: state.lines.filter((line) => line.key !== key) })
 }
 
 export function toggleWish(productId) {
@@ -38,3 +42,4 @@ export function useBag() {
 }
 
 export const bagCount = (bag) => bag.lines.reduce((sum, line) => sum + line.quantity, 0)
+export const bagSubtotal = (bag) => bag.lines.reduce((sum, line) => sum + line.pricePaise * line.quantity, 0)

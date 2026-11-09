@@ -16,7 +16,8 @@ const GARMENTS = {
 }
 
 // Opening a piece shows the product sheet (quick view) over the page.
-const renderDetail = ({ item, ...sheet }) => <ProductSheet product={item.product} subtitle={item.subtitle} {...sheet} />
+// Keyed by piece, so swapping to another piece ("You may also like") starts its choices fresh.
+const renderDetail = ({ item, ...sheet }) => <ProductSheet key={item.id} item={item} product={item.product} subtitle={item.subtitle} {...sheet} />
 
 const NUMBER_WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
 
@@ -35,7 +36,7 @@ function toRailItem(product) {
     tag: formatPaise(product.pricePaise),
     description: `${product.colour.name} ${garment.label}.`,
     slug: product.slug,
-    subtitle: `${product.colour.name} · ${garment.label}`,
+    subtitle: `${garment.label[0].toUpperCase()}${garment.label.slice(1)} in ${product.colour.name.toLowerCase()}`,
     product,
   }
 }

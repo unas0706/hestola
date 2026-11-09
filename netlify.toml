@@ -1,0 +1,13 @@
+# Netlify: build with Vite and serve dist/. See CLAUDE.md for the app itself.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# No router yet: every path (for example the shared /product/:slug links) serves the app.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
