@@ -1,1 +1,12 @@
-/*  /index.html  200
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hestola",
+  "compatibility_date": "2026-11-10",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
